@@ -1,0 +1,35 @@
+{
+  "status": "published",
+  "featured": true,
+  "type": "movie",
+  "title": "ليلة الموتى الأحياء",
+  "original_title": "Night of the Living Dead",
+  "slug": "night-of-the-living-dead-1968",
+  "year": 1968,
+  "release_date": "1968-10-01",
+  "country": "الولايات المتحدة",
+  "language": "الإنجليزية",
+  "runtime": 96,
+  "episodes_count": 0,
+  "rating": 7.8,
+  "genres": ["رعب", "كلاسيكي"],
+  "poster": "https://archive.org/services/img/night_of_the_living_dead",
+  "backdrop": "",
+  "story": "مجموعة غرباء بيلاقوا نفسهم محاصرين جوه بيت ريفي معزول، بعد ما الموتى بيقوموا من قبورهم فجأة. ومع كل ساعة بتعدي، الخطر برا البيت بيزيد، والخلافات جوه البيت بتبقى أخطر منه.",
+  "review": "الفيلم ده هو اللي أسس لكل أفلام الزومبي اللي جت بعده، واتعمل بميزانية صغيرة جدًا. ورغم إنه أبيض وأسود، التوتر فيه لسه شغال لحد النهارده. يناسب محبي الرعب الكلاسيكي وأي حد عايز يعرف أفلام الزومبي بدأت منين.",
+  "director": "George A. Romero",
+  "writer": "John A. Russo, George A. Romero",
+  "cast": [
+    { "name": "Duane Jones", "role": "بن" },
+    { "name": "Judith O'Dea", "role": "باربرا" },
+    { "name": "Karl Hardman", "role": "هاري" }
+  ],
+  "platforms": [
+    { "name": "Internet Archive", "url": "https://archive.org/details/night_of_the_living_dead", "access": "مجانًا" }
+  ],
+  "videos": [
+    { "title": "الفيلم كامل (ملكية عامة)", "url": "https://archive.org/details/night_of_the_living_dead" }
+  ],
+  "episodes": [],
+  "date": "2026-10-03"
+}
