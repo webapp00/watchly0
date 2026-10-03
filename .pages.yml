@@ -1,0 +1,168 @@
+# إعدادات لوحة التحكم (Pages CMS) — https://app.pagescms.org
+media:
+  input: images
+  output: /images
+
+content:
+  - name: works
+    label: الأفلام والمسلسلات
+    type: collection
+    path: content/works
+    format: json
+    filename: "{fields.slug}.json"
+    view:
+      fields: [title, type, year, status]
+      primary: title
+      sort: [date, title]
+      default:
+        sort: date
+        order: desc
+    fields:
+      - name: status
+        label: الحالة
+        type: select
+        default: published
+        options:
+          values:
+            - { value: published, label: منشور }
+            - { value: draft, label: مسودة (مش هيظهر) }
+      - name: featured
+        label: يظهر في واجهة الرئيسية؟
+        type: boolean
+        default: false
+      - name: type
+        label: النوع
+        type: select
+        required: true
+        default: series
+        options:
+          values:
+            - { value: series, label: مسلسل }
+            - { value: movie, label: فيلم }
+      - name: title
+        label: الاسم بالعربي (من غير كلمة فيلم/مسلسل)
+        type: string
+        required: true
+      - name: original_title
+        label: الاسم الأصلي (إنجليزي)
+        type: string
+      - name: slug
+        label: الرابط (إنجليزي بشرطات، مثال khamsin-khamsin-2026)
+        type: string
+        required: true
+        description: ده اللي هيظهر في رابط الصفحة. ما تغيروش بعد النشر.
+      - name: year
+        label: السنة
+        type: number
+      - name: release_date
+        label: تاريخ العرض
+        type: date
+      - name: country
+        label: بلد الإنتاج
+        type: string
+      - name: language
+        label: اللغة
+        type: string
+      - name: runtime
+        label: المدة (بالدقايق)
+        type: number
+      - name: episodes_count
+        label: عدد الحلقات (للمسلسلات)
+        type: number
+      - name: rating
+        label: تقييمك من 10
+        type: number
+      - name: genres
+        label: التصنيفات
+        type: string
+        list: true
+        description: تصنيف واحد في كل خانة (كوميدي، دراما، رعب...). اكتبي نفس الكلمة بنفس الشكل كل مرة.
+      - name: poster
+        label: البوستر (صورة طولية)
+        type: image
+      - name: backdrop
+        label: صورة عريضة (اختياري)
+        type: image
+      - name: story
+        label: ملخص القصة (بأسلوبك)
+        type: text
+        required: true
+      - name: review
+        label: رأي Watchly (فقرتين على الأقل — مهم لجوجل و AdSense)
+        type: text
+      - name: director
+        label: الإخراج
+        type: string
+      - name: writer
+        label: التأليف
+        type: string
+      - name: cast
+        label: طاقم العمل
+        type: object
+        list: true
+        fields:
+          - { name: name, label: اسم الممثل, type: string }
+          - { name: role, label: اسم الشخصية, type: string }
+      - name: platforms
+        label: تتفرج فين؟ (المنصات الرسمية)
+        type: object
+        list: true
+        fields:
+          - { name: name, label: اسم المنصة, type: string }
+          - { name: url, label: رابط العمل على المنصة, type: string }
+          - name: access
+            label: نوع الوصول
+            type: select
+            default: اشتراك
+            options:
+              values: [اشتراك, مجانًا, إيجار, شراء]
+      - name: videos
+        label: فيديوهات (إعلان رسمي أو فيلم ملكية عامة)
+        type: object
+        list: true
+        description: الصقي رابط يوتيوب أو Internet Archive أو Vimeo أو Dailymotion العادي، والموقع بيحوله لوحده.
+        fields:
+          - { name: title, label: اسم الفيديو (مثال الإعلان الرسمي), type: string }
+          - { name: url, label: الرابط, type: string }
+      - name: episodes
+        label: ملخص الحلقات (للمسلسلات)
+        type: object
+        list: true
+        fields:
+          - { name: number, label: رقم الحلقة, type: number }
+          - { name: title, label: عنوان الحلقة (اختياري), type: string }
+          - { name: summary, label: ملخص الحلقة, type: text }
+      - name: date
+        label: تاريخ الإضافة/التحديث (للترتيب)
+        type: date
+
+  - name: site
+    label: إعدادات الموقع
+    type: file
+    path: content/site.json
+    format: json
+    fields:
+      - { name: name, label: اسم الموقع, type: string }
+      - { name: name_ar, label: الاسم بالعربي, type: string }
+      - { name: url, label: رابط الموقع (مثال https://watchly.pages.dev), type: string }
+      - { name: tagline, label: الشعار, type: string }
+      - { name: description, label: وصف الموقع لجوجل, type: text }
+      - { name: email, label: إيميل التواصل, type: string }
+      - name: social
+        label: السوشيال ميديا
+        type: object
+        fields:
+          - { name: facebook, label: فيسبوك, type: string }
+          - { name: x, label: X / تويتر, type: string }
+          - { name: telegram, label: تيليجرام, type: string }
+          - { name: youtube, label: يوتيوب, type: string }
+      - name: ads
+        label: أكواد الإعلانات
+        type: object
+        fields:
+          - { name: head, label: كود في الـ head (AdSense أو كود التوثيق), type: code }
+          - { name: in_page, label: إعلان جوه صفحة العمل, type: code }
+          - { name: body_end, label: كود آخر الصفحة (Adsterra / Monetag), type: code }
+      - { name: ads_txt, label: محتوى ملف ads.txt, type: text }
+      - { name: about, label: صفحة من نحن, type: text }
+      - { name: privacy, label: صفحة سياسة الخصوصية, type: text }
