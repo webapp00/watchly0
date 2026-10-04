@@ -25,5 +25,11 @@
       "name": "كندة علوش"
     }
   ],
+  "platforms": [
+    {
+      "name": "yangoplay",
+      "access": "اشتراك"
+    }
+  ],
   "date": "2026-10-04"
 }
