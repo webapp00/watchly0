@@ -178,3 +178,40 @@ h1,h2,h3{line-height:1.4}
 .epnav .off{opacity:.4}
 .noplay{background:var(--p);border:1px dashed var(--l);border-radius:14px;padding:30px;text-align:center;color:var(--m)}
 .noplay a{color:var(--y)}
+
+/* ===== صفحة المشاهدة (سيرفرات فوق المشغل) ===== */
+.watch-top{background:#000;padding:90px 0 22px;border-bottom:1px solid var(--l)}
+.watch-title{font-size:clamp(20px,3vw,28px);font-weight:900;margin:10px 0 16px}
+.player.wide{display:block;max-width:980px;margin:0 auto}
+.player.wide .servers{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px;background:none;border:0;padding:0 0 14px}
+.player.wide .srv{background:#fff;color:#111;border-radius:30px;padding:5px 14px 5px 6px;font-size:13px;gap:8px}
+.player.wide .srv:before{width:20px;height:20px;background:var(--y);color:#000;font-size:9px}
+.player.wide .srv:hover{background:#ffe08a}
+.player.wide .srv.active{background:var(--y);color:#000}
+.player.wide .srv.active:before{background:#000;color:var(--y)}
+.watch-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--p2);border:1px solid var(--l);border-radius:30px;padding:7px 18px;font-weight:700;font-size:14px}
+.pill:hover{border-color:var(--y);color:var(--y)}
+.pill-dl{background:var(--y);color:#000;border-color:var(--y)}
+.pill-dl:hover{background:var(--y2);color:#000}
+.pill-next{background:#fff;color:#111;border-color:#fff}
+.page-body{padding-top:26px}
+.box{background:var(--p);border:1px solid var(--l);border-radius:16px;padding:16px 18px;margin-bottom:18px}
+.box-h{font-size:17px;font-weight:900;margin:0 0 14px;border-inline-start:4px solid var(--y);padding-inline-start:10px}
+.season-h{font-size:14px;font-weight:900;color:var(--y);margin:16px 0 10px}
+.season-h:first-child{margin-top:0}
+.box .ep{background:var(--p2)}
+@media(max-width:760px){.watch-top{padding-top:80px}.player.wide .srv{font-size:12px}}
+
+/* ===== صفحة التحميل ===== */
+.dls{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.dl{display:flex;align-items:center;gap:12px;background:var(--p);border:1px solid var(--l);border-radius:14px;padding:12px 16px;transition:.2s}
+.dl:hover{border-color:var(--y);transform:translateY(-2px)}
+.dl-ico{width:38px;height:38px;border-radius:50%;background:var(--y);color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0}
+.dl-name{font-weight:900;flex:1}
+.dl-tag{background:var(--l);border-radius:6px;padding:1px 10px;font-size:12px}
+.dl-size{color:var(--m);font-size:13px}
+.dl-go{background:var(--y);color:#000;border-radius:30px;padding:5px 16px;font-weight:900;font-size:13px}
+.dl-btn{padding:12px 34px}
+@media(max-width:560px){.dl{flex-wrap:wrap}.dl-name{flex-basis:60%}}
+.box .ep.on{background:var(--y);color:#000}
