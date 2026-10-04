@@ -162,3 +162,19 @@ h1,h2,h3{line-height:1.4}
 .ftr-links{display:flex;flex-direction:column;gap:6px;font-size:14px}
 .ftr-links a:hover,.social a:hover{color:var(--y)}
 @media(max-width:760px){.ftr-in{grid-template-columns:1fr}}
+
+/* شبكة الحلقات + صفحة الحلقة */
+.epgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.ep{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--p);border:1px solid var(--l);border-radius:12px;padding:10px 6px;transition:.2s}
+.ep small{font-size:11px;color:var(--m)} .ep b{font-size:22px;font-weight:900;line-height:1.2}
+.ep i{position:absolute;top:6px;inset-inline-start:8px;font-style:normal;font-size:10px;color:var(--y)}
+.ep:hover{border-color:var(--y);transform:translateY(-2px)}
+.ep.on{background:var(--y);border-color:var(--y);color:#000} .ep.on small,.ep.on i{color:#000}
+.epnav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;text-align:center}
+.epnav a,.epnav span{display:flex;flex-direction:column;justify-content:center;background:var(--p);border:1px solid var(--l);border-radius:12px;padding:10px}
+.epnav a:hover{border-color:var(--y)}
+.epnav b{font-size:20px;color:var(--y)} .epnav small{font-size:12px;color:var(--m)}
+.epnav .now{background:var(--y);border-color:var(--y);color:#000} .epnav .now b,.epnav .now small{color:#000}
+.epnav .off{opacity:.4}
+.noplay{background:var(--p);border:1px dashed var(--l);border-radius:14px;padding:30px;text-align:center;color:var(--m)}
+.noplay a{color:var(--y)}
