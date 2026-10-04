@@ -15,6 +15,7 @@ const OUT = path.join(ROOT, "dist");
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, "content/site.json"), "utf8"));
 const BASE = (process.env.SITE_URL || site.url || "").replace(/\/$/, "");
 const NOW = new Date().toISOString().slice(0, 10);
+const EXTRA_HOSTS = (site.video_hosts || []).map((d) => String(d).trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "")).filter(Boolean);
 
 /* ================= أدوات مساعدة ================= */
 
@@ -52,7 +53,44 @@ function toEmbed(url) {
   if ((m = u.match(/archive\.org\/(?:details|embed)\/([^/?#]+)/))) return `https://archive.org/embed/${m[1]}`;
   if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return `https://player.vimeo.com/video/${m[1]}`;
   if ((m = u.match(/dailymotion\.com\/video\/([a-z0-9]+)/i))) return `https://geo.dailymotion.com/player.html?video=${m[1]}`;
+  // سيرفرات إضافية انتي ضايفاها من إعدادات الموقع (لمحتوى انتي مالكة حقوقه): رابط الـ embed بيتحط زي ما هو
+  try {
+    const h = new URL(u).hostname.replace(/^www\./, "");
+    if (u.startsWith("https://") && EXTRA_HOSTS.some((d) => h === d || h.endsWith("." + d))) return u;
+  } catch {}
   return null;
+}
+
+/** بيحوّل قايمة روابط فيديو لروابط embed ويشيل اللي مش مسموح */
+function cleanVideos(list, where, defName = "فيديو") {
+  return (list || [])
+    .filter((v) => v && v.url)
+    .map((v, i) => {
+      const embed = toEmbed(v.url);
+      if (!embed) warnings.push(`⚠️ "${where}": الرابط ${v.url} مش من مصدر مسموح واتشال. لو ده سيرفر انتي عايزاه، ضيفي اسمه في "سيرفرات فيديو إضافية" في إعدادات الموقع، واستخدمي رابط الـ embed.`);
+      return { title: v.title || `${defName} ${i + 1}`, embed };
+    })
+    .filter((v) => v.embed);
+}
+
+/** المشغل + أزرار السيرفرات */
+function playerHtml(videos, poster, label = "الفيديوهات") {
+  if (!videos.length) return "";
+  return `<div class="player">
+  <div class="servers"><h3>${esc(label)}</h3>${videos.map((v) => `<button class="srv" data-src="${esc(v.embed)}">${esc(v.title)}</button>`).join("")}</div>
+  <div class="screen"><button class="play" style="background-image:url('${esc(poster)}')" aria-label="تشغيل"><span>▶</span></button></div>
+</div>`;
+}
+
+/** شبكة أزرار الحلقات */
+function epGrid(w, current) {
+  return `<div class="epgrid">${w.episodes
+    .map(
+      (e) => `<a class="ep${e.number == current ? " on" : ""}" href="${e.href}"><small>الحلقة</small><b>${esc(e.number)}</b>${
+        e.servers.length ? '<i title="متاحة للمشاهدة">▶</i>' : ""
+      }</a>`
+    )
+    .join("")}</div>`;
 }
 
 /* ================= قراءة المحتوى ================= */
@@ -78,16 +116,16 @@ const works = fs
     w.genres = (w.genres || []).map((g) => String(g).trim()).filter(Boolean);
     w.cast = (w.cast || []).filter((c) => c && c.name);
     w.platforms = (w.platforms || []).filter((p) => p && p.name && p.url);
-    w.episodes = (w.episodes || []).filter((e) => e && (e.summary || e.title)).sort((a, b) => (a.number || 0) - (b.number || 0));
-    w.videos = (w.videos || [])
-      .filter((v) => v && v.url)
-      .map((v) => {
-        const embed = toEmbed(v.url);
-        if (!embed) warnings.push(`⚠️ "${w.title}": الفيديو ${v.url} مش من مصدر مسموح (YouTube / Archive / Vimeo / Dailymotion) واتشال.`);
-        return { title: v.title || "فيديو", embed };
-      })
-      .filter((v) => v.embed);
+    w.episodes = (w.episodes || []).filter((e) => e && (e.summary || e.title || (e.servers && e.servers.length))).sort((a, b) => (a.number || 0) - (b.number || 0));
+    w.videos = cleanVideos(w.videos, w.title);
     w.href = `/work/${w.slug}/`;
+    w.episodes = w.episodes
+      .filter((e) => e.number !== undefined && e.number !== null && e.number !== "")
+      .map((e) => ({
+        ...e,
+        servers: cleanVideos(e.servers, `${w.title} — الحلقة ${e.number}`, "سيرفر"),
+        href: `${w.href}episode/${e.number}/`,
+      }));
     w.posterUrl = w.poster || POSTER_FALLBACK;
     return w;
   })
@@ -177,6 +215,7 @@ ${body}
     <p class="muted small">Watchly دليل للأعمال الفنية. ما بنرفعش أي محتوى، وكل روابط المشاهدة بتوديك للمنصات الرسمية.<br>© ${new Date().getFullYear()} ${esc(site.name)}</p>
   </div>
 </footer>
+<script>window.WL_HOSTS=${JSON.stringify(EXTRA_HOSTS).replace(/</g, "\\u003c")};</script>
 <script src="/assets/app.js" defer></script>
 ${site.ads?.body_end || ""}
 </body>
@@ -312,25 +351,12 @@ function workPage(w) {
     : `<h2 class="h">تتفرج فين؟</h2><p class="muted">لسه مش متاح على المنصات اللي بنتابعها. هنحدّث الصفحة أول ما يتاح.</p>`;
 
   const player = w.videos.length
-    ? `<h2 class="h">${w.videos.length === 1 ? esc(w.videos[0].title) : "الفيديوهات الرسمية"}</h2>
-<div class="player">
-  <div class="servers"><h3>الفيديوهات</h3>${w.videos
-        .map((v, i) => `<button class="srv${i === 0 ? "" : ""}" data-src="${esc(v.embed)}">${esc(v.title)}</button>`)
-        .join("")}</div>
-  <div class="screen"><button class="play" style="background-image:url('${esc(w.backdrop || w.posterUrl)}')" aria-label="تشغيل"><span>▶</span></button></div>
-</div>`
+    ? `<h2 class="h">${w.videos.length === 1 ? esc(w.videos[0].title) : "الفيديوهات الرسمية"}</h2>${playerHtml(w.videos, w.backdrop || w.posterUrl)}`
     : "";
 
   const eps =
     w.type === "series" && w.episodes.length
-      ? `<h2 class="h">حلقات ${label} ${esc(w.title)}${w.episodes_count ? ` (${esc(w.episodes_count)} حلقات)` : ""}</h2>
-<div class="eplist">${w.episodes
-          .map(
-            (e, i) => `<details${i === w.episodes.length - 1 ? " open" : ""} id="ep-${esc(e.number)}"><summary>الحلقة ${esc(e.number)}${
-              e.title ? ` — ${esc(e.title)}` : ""
-            }</summary>${paras(e.summary)}</details>`
-          )
-          .join("")}</div>`
+      ? `<h2 class="h">حلقات ${label} ${esc(w.title)}${w.episodes_count ? ` (${esc(w.episodes_count)} حلقات)` : ""}</h2>${epGrid(w)}`
       : "";
 
   const cast = w.cast.length
@@ -425,6 +451,49 @@ ${rail("أعمال مشابهة", related, null)}`;
   return layout({ title: seoTitle, description: desc, canonical: w.href, body, image: w.backdrop || w.poster, jsonld: [ld, c.ld] });
 }
 
+function episodePage(w, e, idx) {
+  const label = typeLabel(w.type);
+  const prev = w.episodes[idx - 1], next = w.episodes[idx + 1];
+  const title = `${label} ${w.title} الحلقة ${e.number}${e.title ? " — " + e.title : ""}`;
+  const c = crumbs([
+    { name: "المسلسلات", href: "/series/" },
+    { name: w.title, href: w.href },
+    { name: `الحلقة ${e.number}` },
+  ]);
+  const desc = (e.summary || w.story || title).replace(/\s+/g, " ").slice(0, 155);
+  const poster = w.backdrop || w.posterUrl;
+  const body = `<section class="wrap page">
+  ${c.html}
+  <h1>${esc(title)}</h1>
+  <p class="muted"><a class="y" href="${w.href}">← كل حلقات ${esc(w.title)}</a></p>
+  <div id="watch" style="margin-top:18px">${
+    e.servers.length
+      ? playerHtml(e.servers, poster, "سيرفرات المشاهدة")
+      : `<div class="noplay">الحلقة دي لسه مش متاحة للمشاهدة هنا.${w.platforms.length ? ` تقدر تتفرج عليها على: ${w.platforms.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="nofollow noopener sponsored">${esc(p.name)}</a>`).join("، ")}` : ""}</div>`
+  }</div>
+  <div class="epnav">
+    ${prev ? `<a href="${prev.href}"><b>${esc(prev.number)}</b><small>→ الحلقة السابقة</small></a>` : '<span class="off"><b>—</b><small>الحلقة السابقة</small></span>'}
+    <span class="now"><small>تشاهد الآن</small><b>الحلقة ${esc(e.number)}</b></span>
+    ${next ? `<a href="${next.href}"><b>${esc(next.number)}</b><small>الحلقة التالية ←</small></a>` : '<span class="off"><b>—</b><small>قريبًا</small></span>'}
+  </div>
+  ${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}
+  ${e.summary ? `<h2 class="h">قصة الحلقة</h2><div class="story">${paras(e.summary)}</div>` : ""}
+  <h2 class="h">كل حلقات ${esc(w.title)}</h2>
+  ${epGrid(w, e.number)}
+</section>`;
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "TVEpisode",
+    name: title,
+    url: BASE + e.href,
+    episodeNumber: Number(e.number) || e.number,
+    description: desc,
+    image: w.poster ? (w.poster.startsWith("http") ? w.poster : BASE + w.poster) : undefined,
+    partOfSeries: { "@type": "TVSeries", name: w.title, url: BASE + w.href },
+  };
+  return layout({ title, description: desc, canonical: e.href, body, image: w.backdrop || w.poster, jsonld: [ld, c.ld] });
+}
+
 function textPage(slug, title, html) {
   const c = crumbs([{ name: title }]);
   return layout({ title, canonical: `/${slug}/`, description: `${title} — ${site.name}`, body: `<section class="wrap page narrow">${c.html}<h1>${esc(title)}</h1><div class="story">${html}</div></section>`, jsonld: [c.ld] });
@@ -480,7 +549,10 @@ for (const g of genres) {
   );
 }
 
-for (const w of works) page(w.href, workPage(w), 0.8);
+for (const w of works) {
+  page(w.href, workPage(w), 0.8);
+  if (w.type === "series") w.episodes.forEach((e, i) => page(e.href, episodePage(w, e, i), 0.7));
+}
 
 page("/about/", textPage("about", "من نحن", paras(site.about)), 0.3);
 page("/privacy/", textPage("privacy", "سياسة الخصوصية", paras(site.privacy)), 0.3);
