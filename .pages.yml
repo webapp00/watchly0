@@ -99,14 +99,20 @@ content:
       - name: cast
         label: طاقم العمل
         type: object
-        list: true
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{name} — {role}"
         fields:
           - { name: name, label: اسم الممثل, type: string }
           - { name: role, label: اسم الشخصية, type: string }
       - name: platforms
         label: تتفرج فين؟ (المنصات الرسمية)
         type: object
-        list: true
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{name} ({access})"
         fields:
           - { name: name, label: اسم المنصة, type: string }
           - { name: url, label: رابط العمل على المنصة, type: string }
@@ -119,7 +125,10 @@ content:
       - name: videos
         label: فيديوهات (إعلان رسمي أو فيلم ملكية عامة)
         type: object
-        list: true
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{title}"
         description: الصقي رابط يوتيوب أو Internet Archive أو Vimeo أو Dailymotion العادي، والموقع بيحوله لوحده.
         fields:
           - { name: title, label: اسم الفيديو (مثال الإعلان الرسمي), type: string }
@@ -127,7 +136,10 @@ content:
       - name: episodes
         label: ملخص الحلقات (للمسلسلات)
         type: object
-        list: true
+        list:
+          collapsible:
+            collapsed: true
+            summary: "الحلقة {number} {title}"
         fields:
           - { name: number, label: رقم الحلقة, type: number }
           - { name: title, label: عنوان الحلقة (اختياري), type: string }
@@ -166,6 +178,11 @@ content:
           - { name: head, label: كود في الـ head (AdSense أو كود التوثيق), type: text }
           - { name: in_page, label: إعلان جوه صفحة العمل, type: text }
           - { name: body_end, label: كود آخر الصفحة (Adsterra / Monetag), type: text }
+      - name: video_hosts
+        label: سيرفرات فيديو إضافية (للمحتوى اللي انتي مالكة حقوقه)
+        type: string
+        list: true
+        description: اسم الدومين بس، واحد في كل خانة، مثال streamtape.com. وفي صفحة العمل الصقي رابط الـ embed اللي السيرفر بيديهولك.
       - { name: ads_txt, label: محتوى ملف ads.txt, type: text }
       - { name: about, label: صفحة من نحن, type: text }
       - { name: privacy, label: صفحة سياسة الخصوصية, type: text }
