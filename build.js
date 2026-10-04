@@ -82,15 +82,83 @@ function playerHtml(videos, poster, label = "الفيديوهات") {
 </div>`;
 }
 
-/** شبكة أزرار الحلقات */
+/** اسم السيرفر من الدومين لو مالوش اسم: streamtape.com → Streamtape */
+function hostName(url) {
+  try {
+    const h = new URL(url).hostname.replace(/^www\./, "").split(".");
+    const n = h.length > 1 ? h[h.length - 2] : h[0];
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  } catch { return ""; }
+}
+
+/** روابط التحميل: لازم https ومن سيرفر مضاف في "سيرفرات فيديو إضافية" */
+function cleanDownloads(list, where) {
+  return (list || [])
+    .filter((d) => d && d.url)
+    .map((d) => {
+      const u = String(d.url).trim();
+      let okHost = false;
+      try {
+        const h = new URL(u).hostname.replace(/^www\./, "");
+        okHost = u.startsWith("https://") && EXTRA_HOSTS.some((x) => h === x || h.endsWith("." + x));
+      } catch {}
+      if (!okHost) {
+        warnings.push(`⚠️ "${where}": رابط التحميل ${u} اتشال. لازم يبدأ بـ https ودومينه يكون مكتوب في "سيرفرات فيديو إضافية".`);
+        return null;
+      }
+      return { name: d.title || hostName(u), quality: d.quality || "", size: d.size || "", url: u };
+    })
+    .filter(Boolean);
+}
+
+/** مشغل عريض والسيرفرات أزرار فوقه (شكل صفحات المشاهدة) */
+function playerWide(videos, poster) {
+  if (!videos.length) return "";
+  return `<div class="player wide">
+  <div class="servers">${videos.map((v) => `<button class="srv" data-src="${esc(v.embed)}">${esc(v.title)}</button>`).join("")}</div>
+  <div class="screen"><button class="play" style="background-image:url('${esc(poster)}')" aria-label="تشغيل"><span>▶</span></button></div>
+</div>`;
+}
+
+/** شبكة الحلقات متقسمة مواسم */
 function epGrid(w, current) {
-  return `<div class="epgrid">${w.episodes
+  const seasons = [...new Set(w.episodes.map((e) => e.season))];
+  const multi = seasons.length > 1;
+  return `<div class="seasons">${seasons
     .map(
-      (e) => `<a class="ep${e.number == current ? " on" : ""}" href="${e.href}"><small>الحلقة</small><b>${esc(e.number)}</b>${
-        e.servers.length ? '<i title="متاحة للمشاهدة">▶</i>' : ""
-      }</a>`
+      (sn) => `${multi ? `<h3 class="season-h">الموسم ${esc(sn)}</h3>` : ""}<div class="epgrid">${w.episodes
+        .filter((e) => e.season === sn)
+        .map(
+          (e) => `<a class="ep${e === current ? " on" : ""}" href="${e.href}"><small>الحلقة</small><b>${esc(e.number)}</b>${
+            e.servers.length ? '<i title="متاحة للمشاهدة">▶</i>' : ""
+          }</a>`
+        )
+        .join("")}</div>`
     )
     .join("")}</div>`;
+}
+
+/** صفحة التحميل */
+function downloadPage({ title, back, backLabel, crumbItems, downloads, canonical, image }) {
+  const c = crumbs(crumbItems);
+  const body = `<section class="wrap page narrow">
+  ${c.html}
+  <h1>تحميل ${esc(title)}</h1>
+  <p class="muted"><a class="y" href="${back}">← ${esc(backLabel)}</a></p>
+  ${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}
+  <div class="dls">${downloads
+    .map(
+      (d) => `<a class="dl" href="${esc(d.url)}" target="_blank" rel="nofollow noopener">
+      <span class="dl-ico">⬇</span>
+      <span class="dl-name">${esc(d.name)}</span>
+      ${d.quality ? `<span class="dl-tag">${esc(d.quality)}</span>` : ""}
+      ${d.size ? `<span class="dl-size">${esc(d.size)}</span>` : ""}
+      <span class="dl-go">تحميل</span>
+    </a>`
+    )
+    .join("")}</div>
+</section>`;
+  return layout({ title: `تحميل ${title}`, description: `روابط تحميل ${title}`, canonical, body, image, noindex: true, jsonld: [c.ld] });
 }
 
 /* ================= قراءة المحتوى ================= */
@@ -119,13 +187,21 @@ const works = fs
     w.episodes = (w.episodes || []).filter((e) => e && (e.summary || e.title || (e.servers && e.servers.length))).sort((a, b) => (a.number || 0) - (b.number || 0));
     w.videos = cleanVideos(w.videos, w.title);
     w.href = `/work/${w.slug}/`;
+    w.downloads = cleanDownloads(w.downloads, w.title);
     w.episodes = w.episodes
       .filter((e) => e.number !== undefined && e.number !== null && e.number !== "")
-      .map((e) => ({
-        ...e,
-        servers: cleanVideos(e.servers, `${w.title} — الحلقة ${e.number}`, "سيرفر"),
-        href: `${w.href}episode/${e.number}/`,
-      }));
+      .map((e) => {
+        const season = Number(e.season) || 1;
+        const tag = `${w.title} — ${season > 1 ? `الموسم ${season} ` : ""}الحلقة ${e.number}`;
+        return {
+          ...e,
+          season,
+          label: `${season > 1 ? `الموسم ${season} ` : ""}الحلقة ${e.number}`,
+          servers: cleanVideos(e.servers, tag, "سيرفر").map((v) => ({ ...v, title: /^سيرفر \d+$/.test(v.title) ? hostName(v.embed) || v.title : v.title })),
+          downloads: cleanDownloads(e.downloads, tag),
+        };
+      })
+      .sort((a, b) => a.season - b.season || Number(a.number) - Number(b.number));
     w.posterUrl = w.poster || POSTER_FALLBACK;
     return w;
   })
@@ -138,6 +214,13 @@ for (const w of works) {
   while (seen.has(s)) s = `${w.slug}-${i++}`;
   seen.add(s);
   if (s !== w.slug) { w.slug = s; w.href = `/work/${s}/`; }
+}
+for (const w of works) {
+  for (const e of w.episodes) {
+    e.href = `${w.href}${e.season > 1 ? `season/${e.season}/` : ""}episode/${e.number}/`;
+    e.dlHref = `${e.href}download/`;
+  }
+  w.dlHref = `${w.href}download/`;
 }
 
 const series = works.filter((w) => w.type === "series");
@@ -441,6 +524,7 @@ function workPage(w) {
   <div id="where">${where}</div>
   ${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}
   <div id="watch">${player}</div>
+  ${w.downloads.length ? `<p class="center" style="margin-top:16px"><a class="btn dl-btn" href="${w.dlHref}">⬇ تحميل ${label === "فيلم" ? "الفيلم" : "المسلسل"}</a></p>` : ""}
   ${eps}
   ${cast}
   ${w.review ? `<h2 class="h">رأي Watchly</h2><div class="story">${paras(w.review)}</div>` : ""}
@@ -454,32 +538,37 @@ ${rail("أعمال مشابهة", related, null)}`;
 function episodePage(w, e, idx) {
   const label = typeLabel(w.type);
   const prev = w.episodes[idx - 1], next = w.episodes[idx + 1];
-  const title = `${label} ${w.title} الحلقة ${e.number}${e.title ? " — " + e.title : ""}`;
+  const title = `${label} ${w.title} ${e.label}${e.title ? " — " + e.title : ""}`;
   const c = crumbs([
     { name: "المسلسلات", href: "/series/" },
     { name: w.title, href: w.href },
-    { name: `الحلقة ${e.number}` },
+    { name: e.label },
   ]);
   const desc = (e.summary || w.story || title).replace(/\s+/g, " ").slice(0, 155);
   const poster = w.backdrop || w.posterUrl;
-  const body = `<section class="wrap page">
-  ${c.html}
-  <h1>${esc(title)}</h1>
-  <p class="muted"><a class="y" href="${w.href}">← كل حلقات ${esc(w.title)}</a></p>
-  <div id="watch" style="margin-top:18px">${
-    e.servers.length
-      ? playerHtml(e.servers, poster, "سيرفرات المشاهدة")
-      : `<div class="noplay">الحلقة دي لسه مش متاحة للمشاهدة هنا.${w.platforms.length ? ` تقدر تتفرج عليها على: ${w.platforms.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="nofollow noopener sponsored">${esc(p.name)}</a>`).join("، ")}` : ""}</div>`
-  }</div>
-  <div class="epnav">
-    ${prev ? `<a href="${prev.href}"><b>${esc(prev.number)}</b><small>→ الحلقة السابقة</small></a>` : '<span class="off"><b>—</b><small>الحلقة السابقة</small></span>'}
-    <span class="now"><small>تشاهد الآن</small><b>الحلقة ${esc(e.number)}</b></span>
-    ${next ? `<a href="${next.href}"><b>${esc(next.number)}</b><small>الحلقة التالية ←</small></a>` : '<span class="off"><b>—</b><small>قريبًا</small></span>'}
+  const body = `<section class="watch-top">
+  <div class="wrap">
+    ${c.html}
+    <h1 class="watch-title">${esc(title)}</h1>
+    <div id="watch">${
+      e.servers.length
+        ? playerWide(e.servers, poster)
+        : `<div class="noplay">الحلقة دي لسه مش متاحة للمشاهدة هنا.${w.platforms.length ? ` تقدر تتفرج عليها على: ${w.platforms.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="nofollow noopener sponsored">${esc(p.name)}</a>`).join("، ")}` : ""}</div>`
+    }</div>
+    <div class="watch-actions">
+      ${prev ? `<a class="pill" href="${prev.href}">→ ${esc(prev.label)}</a>` : ""}
+      ${e.downloads.length ? `<a class="pill pill-dl" href="${e.dlHref}">⬇ تحميل الحلقة</a>` : ""}
+      ${next ? `<a class="pill pill-next" href="${next.href}">${esc(next.label)} ←</a>` : ""}
+    </div>
   </div>
+</section>
+<section class="wrap page-body">
   ${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}
-  ${e.summary ? `<h2 class="h">قصة الحلقة</h2><div class="story">${paras(e.summary)}</div>` : ""}
-  <h2 class="h">كل حلقات ${esc(w.title)}</h2>
-  ${epGrid(w, e.number)}
+  <div class="box">
+    <h2 class="box-h">المواسم والحلقات</h2>
+    ${epGrid(w, e)}
+  </div>
+  ${e.summary ? `<div class="box"><h2 class="box-h">قصة الحلقة</h2><div class="story">${paras(e.summary)}</div></div>` : ""}
 </section>`;
   const ld = {
     "@context": "https://schema.org",
@@ -487,6 +576,7 @@ function episodePage(w, e, idx) {
     name: title,
     url: BASE + e.href,
     episodeNumber: Number(e.number) || e.number,
+    partOfSeason: { "@type": "TVSeason", seasonNumber: e.season },
     description: desc,
     image: w.poster ? (w.poster.startsWith("http") ? w.poster : BASE + w.poster) : undefined,
     partOfSeries: { "@type": "TVSeries", name: w.title, url: BASE + w.href },
@@ -551,7 +641,22 @@ for (const g of genres) {
 
 for (const w of works) {
   page(w.href, workPage(w), 0.8);
-  if (w.type === "series") w.episodes.forEach((e, i) => page(e.href, episodePage(w, e, i), 0.7));
+  if (w.downloads.length)
+    write(w.dlHref.replace(/^\//, "") + "index.html", downloadPage({
+      title: `${typeLabel(w.type)} ${w.title}`, back: w.href, backLabel: `رجوع لصفحة ${typeLabel(w.type) === "فيلم" ? "الفيلم" : "المسلسل"}`,
+      crumbItems: [{ name: w.type === "series" ? "المسلسلات" : "الأفلام", href: w.type === "series" ? "/series/" : "/movies/" }, { name: w.title, href: w.href }, { name: "تحميل" }],
+      downloads: w.downloads, canonical: w.dlHref, image: w.poster,
+    }));
+  if (w.type === "series")
+    w.episodes.forEach((e, i) => {
+      page(e.href, episodePage(w, e, i), 0.7);
+      if (e.downloads.length)
+        write(e.dlHref.replace(/^\//, "") + "index.html", downloadPage({
+          title: `${typeLabel(w.type)} ${w.title} ${e.label}`, back: e.href, backLabel: `رجوع لصفحة المشاهدة`,
+          crumbItems: [{ name: "المسلسلات", href: "/series/" }, { name: w.title, href: w.href }, { name: e.label, href: e.href }, { name: "تحميل" }],
+          downloads: e.downloads, canonical: e.dlHref, image: w.poster,
+        }));
+    });
 }
 
 page("/about/", textPage("about", "من نحن", paras(site.about)), 0.3);
