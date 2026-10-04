@@ -133,17 +133,54 @@ content:
         fields:
           - { name: title, label: اسم الفيديو (مثال الإعلان الرسمي), type: string }
           - { name: url, label: الرابط, type: string }
+      - name: downloads
+        label: روابط تحميل الفيلم
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{title} {quality}"
+        fields:
+          - { name: title, label: اسم السيرفر (لو فاضي بيتكتب لوحده), type: string }
+          - { name: quality, label: الجودة (مثلا 1080p), type: string }
+          - { name: size, label: الحجم (مثلا 1.2 GB), type: string }
+          - { name: url, label: رابط التحميل, type: string }
       - name: episodes
-        label: ملخص الحلقات (للمسلسلات)
+        label: الحلقات (للمسلسلات)
         type: object
         list:
           collapsible:
             collapsed: true
             summary: "الحلقة {number} {title}"
         fields:
+          - { name: season, label: رقم الموسم (سيبيه فاضي لو موسم واحد), type: number }
           - { name: number, label: رقم الحلقة, type: number }
           - { name: title, label: عنوان الحلقة (اختياري), type: string }
           - { name: summary, label: ملخص الحلقة, type: text }
+          - name: servers
+            label: سيرفرات المشاهدة (للمحتوى اللي انتي مالكة حقوقه)
+            type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{title}"
+            description: لكل سيرفر اكتبي اسم (مثلا سيرفر 1) ورابط الـ embed
+            fields:
+              - { name: title, label: اسم السيرفر, type: string }
+              - { name: url, label: رابط الـ embed, type: string }
+          - name: downloads
+            label: روابط التحميل
+            type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{title} {quality}"
+            description: رابط صفحة التحميل على السيرفر (مش رابط الـ embed)
+            fields:
+              - { name: title, label: اسم السيرفر (لو فاضي بيتكتب لوحده), type: string }
+              - { name: quality, label: الجودة (مثلا 1080p), type: string }
+              - { name: size, label: الحجم (مثلا 450 MB), type: string }
+              - { name: url, label: رابط التحميل, type: string }
       - name: date
         label: تاريخ الإضافة/التحديث (للترتيب)
         type: date
