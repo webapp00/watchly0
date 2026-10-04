@@ -2,6 +2,8 @@
   "name": "Watchly",
   "name_ar": "واتشلي",
   "url": "https://watchly0.karmashawky00.workers.dev/",
+  "logo": "/images/watchly-logo-512.png",
+  "favicon": "/images/watchly-favicon.png",
   "tagline": "دليلك للأفلام والمسلسلات: القصة، الأبطال، الحلقات، وتتفرج فين",
   "description": "واتشلي — دليل عربي للأفلام والمسلسلات: ملخصات القصص والحلقات، طاقم العمل، الإعلانات الرسمية، وأماكن المشاهدة القانونية على المنصات.",
   "email": "watchly.contact@example.com",
