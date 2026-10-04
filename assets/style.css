@@ -18,6 +18,8 @@ h1,h2,h3{line-height:1.4}
 .hdr-in{display:flex;align-items:center;gap:22px;height:64px}
 .logo{font-size:26px;font-weight:900;letter-spacing:-.5px;color:#fff}
 .logo span{color:var(--y)}
+.logo img{height:42px;width:auto;display:block}
+.ftr .logo img{height:48px}
 .nav{display:flex;gap:4px;flex:1}
 .nav a{padding:8px 12px;border-radius:8px;font-weight:700;font-size:15px;color:#fffc}
 .nav a:hover,.nav a.on{color:var(--y)}
@@ -41,7 +43,11 @@ h1,h2,h3{line-height:1.4}
 /* ---------- الرئيسية ---------- */
 .hero{position:relative;min-height:72vh;background-size:cover;background-position:center 25%;display:flex;align-items:flex-end}
 .hero-fade{position:absolute;inset:0;background:linear-gradient(to top,var(--bg) 6%,#0b0b0bd9 45%,#0b0b0b66)}
-.hero-in{position:relative;padding-bottom:56px;padding-top:120px}
+.hero-in{position:relative;padding-bottom:56px;padding-top:120px;display:flex;gap:36px;align-items:flex-end}
+.hero.no-bd{background-size:cover;background-position:center;}
+.hero.no-bd .hero-fade{background:linear-gradient(to top,var(--bg) 6%,#0b0b0bee 40%,#0b0b0bcc);backdrop-filter:blur(18px)}
+.hero-poster{width:230px;border-radius:18px;border:1px solid var(--l);box-shadow:0 20px 50px #000a;flex-shrink:0}
+@media(max-width:760px){.hero-poster{display:none}}
 .hero h1{font-size:clamp(30px,5vw,56px);font-weight:900;margin:12px 0 4px;max-width:760px}
 .hero-story{max-width:620px;color:#fffd;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sec{margin-top:40px}
