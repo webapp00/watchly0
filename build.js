@@ -114,6 +114,10 @@ function layout({ title, description, canonical, body, image, jsonld = [], noind
   const url = BASE + (canonical || "/");
   const img = image ? (image.startsWith("http") ? image : BASE + image) : "";
   const social = Object.entries(site.social || {}).filter(([, v]) => v);
+  const logoHtml = site.logo
+    ? `<a class="logo" href="/"><img src="${esc(site.logo)}" alt="${esc(site.name)}"></a>`
+    : `<a class="logo" href="/" dir="ltr">Watch<span>ly</span></a>`;
+  const ogImg = img || (site.cover ? (site.cover.startsWith("http") ? site.cover : BASE + site.cover) : "");
   return `<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -128,10 +132,10 @@ ${noindex ? '<meta name="robots" content="noindex, follow">' : '<meta name="robo
 <meta property="og:title" content="${esc(t)}">
 <meta property="og:description" content="${esc(description || site.description)}">
 <meta property="og:url" content="${esc(url)}">
-${img ? `<meta property="og:image" content="${esc(img)}">` : ""}
+${ogImg ? `<meta property="og:image" content="${esc(ogImg)}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b0b0b">
-<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="${esc(site.favicon || "/assets/icon.svg")}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -143,7 +147,7 @@ ${site.ads?.head || ""}
 <header class="hdr" id="hdr">
   <div class="wrap hdr-in">
     <button class="burger" id="burger" aria-label="القائمة">☰</button>
-    <a class="logo" href="/" dir="ltr">Watch<span>ly</span></a>
+    ${logoHtml}
     <nav class="nav" id="nav">
       <a href="/">الرئيسية</a>
       <a href="/series/">المسلسلات</a>
@@ -160,7 +164,7 @@ ${body}
 <footer class="ftr">
   <div class="wrap ftr-in">
     <div>
-      <a class="logo" href="/" dir="ltr">Watch<span>ly</span></a>
+      ${logoHtml}
       <p>${esc(site.tagline)}</p>
       ${social.length ? `<p class="social">${social.map(([k, v]) => `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(k)}</a>`).join(" · ")}</p>` : ""}
     </div>
@@ -216,14 +220,17 @@ const rail = (title, list, more) =>
 function homePage() {
   const hero = works.find((w) => w.featured) || works[0];
   const heroHtml = hero
-    ? `<section class="hero" style="background-image:url('${esc(hero.backdrop || hero.posterUrl)}')">
+    ? `<section class="hero${hero.backdrop ? "" : " no-bd"}" style="background-image:url('${esc(hero.backdrop || hero.posterUrl)}')">
   <div class="hero-fade"></div>
   <div class="wrap hero-in">
+    ${hero.backdrop ? "" : `<img class="hero-poster" src="${esc(hero.posterUrl)}" alt="${esc(hero.title)}" onerror="this.onerror=null;this.src='/assets/poster.svg'">`}
+    <div>
     <span class="pill">⭐ مختارات Watchly</span>
     <h1>${typeLabel(hero.type)} ${esc(hero.title)}</h1>
     <p class="muted">${esc([hero.year, hero.country, hero.genres.join("، ")].filter(Boolean).join(" · "))}</p>
     <p class="hero-story">${esc(hero.story || "")}</p>
     <div class="btns"><a class="btn" href="${hero.href}">التفاصيل وتتفرج فين</a></div>
+    </div>
   </div>
 </section>`
     : `<section class="wrap" style="padding-top:110px"><h1>أهلًا في ${esc(site.name)}</h1><p class="muted">ضيفي أول فيلم أو مسلسل من لوحة التحكم.</p></section>`;
