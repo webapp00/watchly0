@@ -160,9 +160,9 @@ content:
         label: أكواد الإعلانات
         type: object
         fields:
-          - { name: head, label: كود في الـ head (AdSense أو كود التوثيق), type: code }
-          - { name: in_page, label: إعلان جوه صفحة العمل, type: code }
-          - { name: body_end, label: كود آخر الصفحة (Adsterra / Monetag), type: code }
+          - { name: head, label: كود في الـ head (AdSense أو كود التوثيق), type: text }
+          - { name: in_page, label: إعلان جوه صفحة العمل, type: text }
+          - { name: body_end, label: كود آخر الصفحة (Adsterra / Monetag), type: text }
       - { name: ads_txt, label: محتوى ملف ads.txt, type: text }
       - { name: about, label: صفحة من نحن, type: text }
       - { name: privacy, label: صفحة سياسة الخصوصية, type: text }
