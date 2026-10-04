@@ -145,6 +145,9 @@ content:
       - { name: name, label: اسم الموقع, type: string }
       - { name: name_ar, label: الاسم بالعربي, type: string }
       - { name: url, label: رابط الموقع (مثال https://watchly.pages.dev), type: string }
+      - { name: logo, label: اللوجو (PNG بخلفية شفافة يفضل), type: image }
+      - { name: favicon, label: أيقونة التاب في المتصفح (صورة مربعة صغيرة), type: image }
+      - { name: cover, label: صورة المشاركة الافتراضية (بتظهر لما حد يشير الموقع على فيسبوك/واتساب), type: image }
       - { name: tagline, label: الشعار, type: string }
       - { name: description, label: وصف الموقع لجوجل, type: text }
       - { name: email, label: إيميل التواصل, type: string }
