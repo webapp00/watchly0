@@ -18,14 +18,8 @@
     if (h === "/" ? location.pathname === "/" : location.pathname.indexOf(h) === 0) a.classList.add("on");
   });
 
-  /* ---- المشغل: مصادر قانونية بس ---- */
-  var ALLOWED = ["youtube-nocookie.com", "youtube.com", "archive.org", "player.vimeo.com", "geo.dailymotion.com", "dailymotion.com"];
-  function ok(u) {
-    try {
-      var h = new URL(u).hostname.replace(/^www\./, "");
-      return ALLOWED.some(function (a) { return h === a || h.slice(-a.length - 1) === "." + a; });
-    } catch (e) { return false; }
-  }
+  /* ---- المشغل ---- */
+  function ok(u) { return /^https?:\/\//i.test(String(u || "")); }
   document.querySelectorAll(".player").forEach(function (p) {
     var btns = p.querySelectorAll(".srv"), screen = p.querySelector(".screen");
     function load(i) {
@@ -43,6 +37,24 @@
     var play = p.querySelector(".play");
     if (play) play.addEventListener("click", function () { load(0); });
   });
+
+  /* ---- التريلر في نافذة ---- */
+  var modal = document.getElementById("trailer-modal");
+  if (modal) {
+    var mscreen = modal.querySelector(".screen");
+    var close = function () { modal.hidden = true; mscreen.innerHTML = ""; };
+    document.querySelectorAll("[data-trailer]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var f = document.createElement("iframe");
+        f.src = b.getAttribute("data-trailer") + (b.getAttribute("data-trailer").indexOf("?") > -1 ? "&" : "?") + "autoplay=1";
+        f.allowFullscreen = true; f.setAttribute("allow", "autoplay; encrypted-media; fullscreen");
+        mscreen.innerHTML = ""; mscreen.appendChild(f); modal.hidden = false;
+      });
+    });
+    modal.querySelector(".modal-x").addEventListener("click", close);
+    modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  }
 
   /* ---- البحث ---- */
   var q = document.getElementById("q");
