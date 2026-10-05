@@ -1,0 +1,28 @@
+{
+  "status": "published",
+  "featured": true,
+  "type": "series",
+  "title": "فيلم تجريبي",
+  "slug": "night of living dead 2024",
+  "year": 2024,
+  "release_date": "2026-10-04",
+  "story": "المفروض تلاقي ٣ أزرار سيرفرات فوق المشغل، ولما تدوسي على أي واحد الفيديو يشتغل. الروابط دي مسموحة في الموقع من الأول، فمش محتاجة تضيفي أي دومين.",
+  "episodes": [
+    {
+      "season": 1,
+      "number": 1,
+      "summary": "المفروض تلاقي ٣ أزرار سيرفرات فوق المشغل، ولما تدوسي على أي واحد الفيديو يشتغل. الروابط دي مسموحة في الموقع من الأول، فمش محتاجة تضيفي أي دومين.",
+      "servers": [
+        {
+          "title": "   https://archive.org/embed/night_of_the_living_dead",
+          "url": "  https://archive.org/embed/night_of_the_living_dead"
+        },
+        {
+          "title": "2",
+          "url": "https://archive.org/embed/BigBuckBunny_124"
+        }
+      ]
+    }
+  ],
+  "date": "2026-10-04"
+}
