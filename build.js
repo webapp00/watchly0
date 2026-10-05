@@ -44,21 +44,19 @@ function copyDir(src, dest) {
   }
 }
 
-/** بيحوّل أي رابط فيديو عادي لرابط embed — ومن مصادر قانونية بس */
+/** بيحوّل أي رابط فيديو لرابط embed. لو اتلصق كود <iframe> كامل بياخد الـ src منه */
 function toEmbed(url) {
-  const u = String(url || "").trim();
+  let u = String(url || "").trim();
+  const src = u.match(/src\s*=\s*["']([^"']+)["']/i);
+  if (src) u = src[1];
+  if (u.startsWith("//")) u = "https:" + u;
   let m;
   if ((m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,})/)))
     return `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0`;
   if ((m = u.match(/archive\.org\/(?:details|embed)\/([^/?#]+)/))) return `https://archive.org/embed/${m[1]}`;
   if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return `https://player.vimeo.com/video/${m[1]}`;
   if ((m = u.match(/dailymotion\.com\/video\/([a-z0-9]+)/i))) return `https://geo.dailymotion.com/player.html?video=${m[1]}`;
-  // سيرفرات إضافية انتي ضايفاها من إعدادات الموقع (لمحتوى انتي مالكة حقوقه): رابط الـ embed بيتحط زي ما هو
-  try {
-    const h = new URL(u).hostname.replace(/^www\./, "");
-    if (u.startsWith("https://") && EXTRA_HOSTS.some((d) => h === d || h.endsWith("." + d))) return u;
-  } catch {}
-  return null;
+  return /^https?:\/\/[^\s"'<>]+$/i.test(u) ? u : null;
 }
 
 /** بيحوّل قايمة روابط فيديو لروابط embed ويشيل اللي مش مسموح */
@@ -67,7 +65,7 @@ function cleanVideos(list, where, defName = "فيديو") {
     .filter((v) => v && v.url)
     .map((v, i) => {
       const embed = toEmbed(v.url);
-      if (!embed) warnings.push(`⚠️ "${where}": الرابط ${v.url} مش من مصدر مسموح واتشال. لو ده سيرفر انتي عايزاه، ضيفي اسمه في "سيرفرات فيديو إضافية" في إعدادات الموقع، واستخدمي رابط الـ embed.`);
+      if (!embed) warnings.push(`⚠️ "${where}": الرابط ${v.url} مش رابط صحيح واتشال (لازم يبدأ بـ https://).`);
       return { title: v.title || `${defName} ${i + 1}`, embed };
     })
     .filter((v) => v.embed);
@@ -91,24 +89,28 @@ function hostName(url) {
   } catch { return ""; }
 }
 
-/** روابط التحميل: لازم https ومن سيرفر مضاف في "سيرفرات فيديو إضافية" */
+/** روابط التحميل */
 function cleanDownloads(list, where) {
   return (list || [])
     .filter((d) => d && d.url)
     .map((d) => {
       const u = String(d.url).trim();
-      let okHost = false;
-      try {
-        const h = new URL(u).hostname.replace(/^www\./, "");
-        okHost = u.startsWith("https://") && EXTRA_HOSTS.some((x) => h === x || h.endsWith("." + x));
-      } catch {}
-      if (!okHost) {
-        warnings.push(`⚠️ "${where}": رابط التحميل ${u} اتشال. لازم يبدأ بـ https ودومينه يكون مكتوب في "سيرفرات فيديو إضافية".`);
+      if (!/^https?:\/\/[^\s"'<>]+$/i.test(u)) {
+        warnings.push(`⚠️ "${where}": رابط التحميل ${u} مش صحيح واتشال (لازم يبدأ بـ https://).`);
         return null;
       }
       return { name: d.title || hostName(u), quality: d.quality || "", size: d.size || "", url: u };
     })
     .filter(Boolean);
+}
+
+/** صفحة المشاهدة: السيرفرات عمود على الجنب والمشغل جنبه */
+function playerSide(videos, poster) {
+  if (!videos.length) return "";
+  return `<div class="player side">
+  <div class="servers"><h3>سيرفرات المشاهدة</h3>${videos.map((v) => `<button class="srv" data-src="${esc(v.embed)}">${esc(v.title)}</button>`).join("")}</div>
+  <div class="screen"><button class="play" style="background-image:url('${esc(poster)}')" aria-label="تشغيل"><span>▶</span></button></div>
+</div>`;
 }
 
 /** مشغل عريض والسيرفرات أزرار فوقه (شكل صفحات المشاهدة) */
@@ -121,8 +123,28 @@ function playerWide(videos, poster) {
 }
 
 /** شبكة الحلقات متقسمة مواسم */
+/**
+ * إضافة سيرفرات/تحميل لحلقات كتير مرة واحدة من خانة نص:
+ *   5 | https://... | https://...      ← الحلقة 5
+ *   2-5 | https://...                   ← الموسم 2 الحلقة 5
+ */
+function mergeBulk(episodes, text, key) {
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const parts = raw.split("|").map((x) => x.trim()).filter(Boolean);
+    if (parts.length < 2) continue;
+    const m = parts[0].match(/^(?:(\d+)\s*[-x×]\s*)?(\d+)$/i);
+    if (!m) continue;
+    const season = m[1] ? Number(m[1]) : 1, number = Number(m[2]);
+    let ep = episodes.find((e) => (Number(e.season) || 1) === season && Number(e.number) === number);
+    if (!ep) { ep = { season, number, summary: "", title: "" }; episodes.push(ep); }
+    ep[key] = [...(ep[key] || []), ...parts.slice(1).filter((u) => /^https?:\/\//.test(u)).map((url) => ({ title: "", url }))];
+  }
+  return episodes;
+}
+
 function epGrid(w, current) {
   const seasons = [...new Set(w.episodes.map((e) => e.season))];
+  if (!seasons.length && Number(w.episodes_count) > 0) seasons.push(1);
   const multi = seasons.length > 1;
   return `<div class="seasons">${seasons
     .map(
@@ -133,7 +155,13 @@ function epGrid(w, current) {
             e.servers.length ? '<i title="متاحة للمشاهدة">▶</i>' : ""
           }</a>`
         )
-        .join("")}</div>`
+        .join("")}${
+        sn === 1 && Number(w.episodes_count) > 0
+          ? Array.from({ length: Math.max(0, Number(w.episodes_count) - Math.max(0, ...w.episodes.filter((e) => e.season === 1).map((e) => Number(e.number) || 0))) }, (_, i) =>
+              `<span class="ep soon"><small>الحلقة</small><b>${Math.max(0, ...w.episodes.filter((e) => e.season === 1).map((e) => Number(e.number) || 0)) + i + 1}</b><i>قريبًا</i></span>`
+            ).join("")
+          : ""
+      }</div>`
     )
     .join("")}</div>`;
 }
@@ -184,8 +212,10 @@ const works = fs
     w.genres = (w.genres || []).map((g) => String(g).trim()).filter(Boolean);
     w.cast = (w.cast || []).filter((c) => c && c.name);
     w.platforms = (w.platforms || []).filter((p) => p && p.name && p.url);
-    w.episodes = (w.episodes || []).filter((e) => e && (e.summary || e.title || (e.servers && e.servers.length))).sort((a, b) => (a.number || 0) - (b.number || 0));
-    w.videos = cleanVideos(w.videos, w.title);
+    w.episodes = mergeBulk(mergeBulk([...(w.episodes || [])], w.servers_bulk, "servers"), w.downloads_bulk, "downloads");
+    w.episodes = w.episodes.filter((e) => e && (e.summary || e.title || (e.servers && e.servers.length) || (e.downloads && e.downloads.length))).sort((a, b) => (a.number || 0) - (b.number || 0));
+    w.videos = cleanVideos(w.videos, w.title, "سيرفر").map((v) => ({ ...v, title: /^سيرفر \d+$/.test(v.title) ? hostName(v.embed) || v.title : v.title }));
+    w.trailerEmbed = w.trailer ? toEmbed(w.trailer) : null;
     w.href = `/work/${w.slug}/`;
     w.downloads = cleanDownloads(w.downloads, w.title);
     w.episodes = w.episodes
@@ -221,6 +251,8 @@ for (const w of works) {
     e.dlHref = `${e.href}download/`;
   }
   w.dlHref = `${w.href}download/`;
+  w.watchHref = `${w.href}watch/`;
+  w.firstEp = w.episodes.find((e) => e.servers.length) || w.episodes[0];
 }
 
 const series = works.filter((w) => w.type === "series");
@@ -293,9 +325,10 @@ ${body}
       <a href="/about/">من نحن</a>
       <a href="/privacy/">سياسة الخصوصية</a>
       <a href="/contact/">اتصل بنا</a>
+      <a href="/dmca/">حقوق النشر (DMCA)</a>
       <a href="/sitemap.xml">خريطة الموقع</a>
     </div>
-    <p class="muted small">Watchly دليل للأعمال الفنية. ما بنرفعش أي محتوى، وكل روابط المشاهدة بتوديك للمنصات الرسمية.<br>© ${new Date().getFullYear()} ${esc(site.name)}</p>
+    <p class="muted small">لو عندك أي ملاحظة على محتوى في الموقع، تواصل معانا من <a href="/dmca/">صفحة حقوق النشر</a>.<br>© ${new Date().getFullYear()} ${esc(site.name)}</p>
   </div>
 </footer>
 <script>window.WL_HOSTS=${JSON.stringify(EXTRA_HOSTS).replace(/</g, "\\u003c")};</script>
@@ -500,39 +533,83 @@ function workPage(w) {
       : {}),
   };
 
-  const body = `<section class="detail" style="--img:url('${esc(w.backdrop || w.posterUrl)}')">
+  const watchTarget = w.type === "movie" ? (w.videos.length ? w.watchHref : null) : w.firstEp ? w.firstEp.href : null;
+  const dlTarget = w.type === "movie" ? (w.downloads.length ? w.dlHref : null) : w.firstEp && w.firstEp.downloads.length ? w.firstEp.dlHref : null;
+  const what = w.type === "series" ? "المسلسل" : "الفيلم";
+  const facts = [
+    ["🏷️", "التصنيف", w.type === "series" ? "مسلسلات" : "أفلام"],
+    ["🎭", `نوع ${what}`, w.genres.map((g) => `<a href="${genreHref(g)}">${esc(g)}</a>`).join(" "), true],
+    ["⏱️", `مدة ${what}`, w.runtime ? `${esc(w.runtime)} دقيقة` : "", true],
+    ["📅", "سنة الإصدار", w.year],
+    ["🗣️", "اللغة", w.language],
+    ["🎞️", "الجودة", w.quality],
+    ["🌍", "الدولة", w.country],
+    ["🎬", "الإخراج", w.director],
+    ["✍️", "التأليف", w.writer],
+    ["📺", "عدد الحلقات", w.type === "series" && w.episodes_count ? w.episodes_count : ""],
+  ]
+    .filter(([, , v]) => v)
+    .map(([ic, k, v, raw]) => `<div class="fact"><span class="fact-k">${ic} ${k}:</span> <span class="fact-v">${raw ? v : esc(v)}</span></div>`)
+    .join("");
+
+  const body = `<section class="detail2" style="--img:url('${esc(w.backdrop || w.posterUrl)}')">
   <div class="detail-bg"></div>
-  <div class="wrap detail-in">
-    <img class="poster" src="${esc(w.posterUrl)}" alt="${esc(label + " " + w.title)}" onerror="this.onerror=null;this.src='/assets/poster.svg'">
-    <div>
-      ${c.html}
-      <h1>${label} ${esc(w.title)}${w.year ? ` <small>(${esc(w.year)})</small>` : ""}</h1>
+  <div class="wrap d2">
+    <aside class="d2-poster">
+      <img class="poster" src="${esc(w.posterUrl)}" alt="${esc(label + " " + w.title)}" onerror="this.onerror=null;this.src='/assets/poster.svg'">
+      ${w.rating ? `<span class="d2-rate">★ ${esc(w.rating)}</span>` : ""}
+      ${w.trailerEmbed ? `<button class="trailer-btn" data-trailer="${esc(w.trailerEmbed)}">▶ مشاهدة التريلر</button>` : ""}
+    </aside>
+    <div class="d2-main">
+      <h1>${label} ${esc(w.title)}${w.year ? " " + esc(w.year) : ""}</h1>
       ${w.original_title ? `<p class="orig" dir="ltr">${esc(w.original_title)}</p>` : ""}
-      <div class="meta">${meta}</div>
-      <div class="tags">${w.genres.map((g) => `<a href="${genreHref(g)}">${esc(g)}</a>`).join("")}</div>
-      <div class="story">${paras(w.story)}</div>
-      <p class="muted small">${w.director ? `<b>إخراج:</b> ${esc(w.director)}` : ""}${w.director && w.writer ? " &nbsp;|&nbsp; " : ""}${
-    w.writer ? `<b>تأليف:</b> ${esc(w.writer)}` : ""
-  }</p>
-      <div class="btns">${w.platforms.length ? '<a class="btn" href="#where">تتفرج فين؟</a>' : ""}${
-    w.videos.length ? '<a class="btn ghost" href="#watch">▶ الفيديو</a>' : ""
-  }</div>
+      ${c.html}
+      <h2 class="h2q">قصة ${what}</h2>
+      <div class="story-box">${paras(w.story)}</div>
+      <h2 class="h2q">تفاصيل ${what}</h2>
+      <div class="facts">${facts}</div>
     </div>
+    <aside class="d2-actions">
+      ${watchTarget ? `<a class="act act-watch" href="${watchTarget}"><span class="act-ic">🎬</span><b>مشاهدة الآن</b><small>الذهاب لصفحة المشاهدة</small></a>` : ""}
+      ${dlTarget ? `<a class="act act-dl" href="${dlTarget}"><span class="act-ic">⬇</span><b>تحميل الآن</b><small>الذهاب لصفحة التحميل</small></a>` : ""}
+      ${!watchTarget && w.platforms.length ? `<a class="act act-watch" href="#where"><span class="act-ic">📺</span><b>تتفرج فين؟</b><small>المنصات المتاح عليها</small></a>` : ""}
+    </aside>
   </div>
 </section>
 <section class="wrap body">
-  <div id="where">${where}</div>
   ${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}
-  <div id="watch">${player}</div>
-  ${w.downloads.length ? `<p class="center" style="margin-top:16px"><a class="btn dl-btn" href="${w.dlHref}">⬇ تحميل ${label === "فيلم" ? "الفيلم" : "المسلسل"}</a></p>` : ""}
   ${eps}
+  ${w.platforms.length ? `<div id="where">${where}</div>` : ""}
   ${cast}
   ${w.review ? `<h2 class="h">رأي Watchly</h2><div class="story">${paras(w.review)}</div>` : ""}
-  ${details ? `<h2 class="h">تفاصيل العمل</h2><dl class="dl">${details}</dl>` : ""}
 </section>
-${rail("أعمال مشابهة", related, null)}`;
+${rail("أعمال مشابهة", related, null)}
+<div class="modal" id="trailer-modal" hidden><div class="modal-in"><button class="modal-x" aria-label="إغلاق">✕</button><div class="screen"></div></div></div>`;
 
   return layout({ title: seoTitle, description: desc, canonical: w.href, body, image: w.backdrop || w.poster, jsonld: [ld, c.ld] });
+}
+
+function watchShell({ c, title, back, dl, playerBlock, extra = "" }) {
+  return `<section class="watch2">
+  <div class="wrap">
+    ${c.html}
+    <div class="w2-bar">
+      <a class="w2-back" href="${back}">→ عودة للتفاصيل</a>
+      <h1 class="w2-title">${esc(title)}</h1>
+      ${dl ? `<a class="w2-dl" href="${dl}">⬇ تحميل الآن</a>` : "<span></span>"}
+    </div>
+    <div id="watch">${playerBlock}</div>
+    ${extra}
+  </div>
+</section>`;
+}
+
+function moviePage(w) {
+  const title = `فيلم ${w.title}${w.year ? " " + w.year : ""}`;
+  const c = crumbs([{ name: "الأفلام", href: "/movies/" }, { name: w.title, href: w.href }, { name: "مشاهدة" }]);
+  const body = watchShell({ c, title, back: w.href, dl: w.downloads.length ? w.dlHref : null, playerBlock: playerSide(w.videos, w.backdrop || w.posterUrl) }) +
+    `<section class="wrap page-body">${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}</section>${rail("أفلام مشابهة", works.filter((x) => x !== w && x.type === "movie" && x.genres.some((g) => w.genres.includes(g))).slice(0, 12), null)}`;
+  return layout({ title: `مشاهدة ${title}`, description: (w.story || title).replace(/\s+/g, " ").slice(0, 155), canonical: w.watchHref, body, image: w.backdrop || w.poster, jsonld: [c.ld] });
 }
 
 function episodePage(w, e, idx) {
@@ -546,22 +623,14 @@ function episodePage(w, e, idx) {
   ]);
   const desc = (e.summary || w.story || title).replace(/\s+/g, " ").slice(0, 155);
   const poster = w.backdrop || w.posterUrl;
-  const body = `<section class="watch-top">
-  <div class="wrap">
-    ${c.html}
-    <h1 class="watch-title">${esc(title)}</h1>
-    <div id="watch">${
-      e.servers.length
-        ? playerWide(e.servers, poster)
-        : `<div class="noplay">الحلقة دي لسه مش متاحة للمشاهدة هنا.${w.platforms.length ? ` تقدر تتفرج عليها على: ${w.platforms.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="nofollow noopener sponsored">${esc(p.name)}</a>`).join("، ")}` : ""}</div>`
-    }</div>
-    <div class="watch-actions">
+  const playerBlock = e.servers.length
+    ? playerSide(e.servers, poster)
+    : `<div class="noplay">الحلقة دي لسه مش متاحة للمشاهدة.${w.platforms.length ? ` تقدر تتفرج عليها على: ${w.platforms.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="nofollow noopener sponsored">${esc(p.name)}</a>`).join("، ")}` : ""}</div>`;
+  const nav = `<div class="watch-actions">
       ${prev ? `<a class="pill" href="${prev.href}">→ ${esc(prev.label)}</a>` : ""}
-      ${e.downloads.length ? `<a class="pill pill-dl" href="${e.dlHref}">⬇ تحميل الحلقة</a>` : ""}
       ${next ? `<a class="pill pill-next" href="${next.href}">${esc(next.label)} ←</a>` : ""}
-    </div>
-  </div>
-</section>
+    </div>`;
+  const body = watchShell({ c, title, back: w.href, dl: e.downloads.length ? e.dlHref : null, playerBlock, extra: nav }) + `
 <section class="wrap page-body">
   ${site.ads?.in_page ? `<div class="ad">${site.ads.in_page}</div>` : ""}
   <div class="box">
@@ -641,6 +710,7 @@ for (const g of genres) {
 
 for (const w of works) {
   page(w.href, workPage(w), 0.8);
+  if (w.type === "movie" && w.videos.length) page(w.watchHref, moviePage(w), 0.7);
   if (w.downloads.length)
     write(w.dlHref.replace(/^\//, "") + "index.html", downloadPage({
       title: `${typeLabel(w.type)} ${w.title}`, back: w.href, backLabel: `رجوع لصفحة ${typeLabel(w.type) === "فيلم" ? "الفيلم" : "المسلسل"}`,
@@ -661,6 +731,7 @@ for (const w of works) {
 
 page("/about/", textPage("about", "من نحن", paras(site.about)), 0.3);
 page("/privacy/", textPage("privacy", "سياسة الخصوصية", paras(site.privacy)), 0.3);
+page("/dmca/", textPage("dmca", "حقوق النشر (DMCA)", paras(site.dmca || "بنحترم حقوق النشر. لو انت صاحب حقوق أي عمل معروض في الموقع وشايف إنه معروض من غير إذنك، ابعتلنا على الإيميل اللي تحت اسم العمل ورابط الصفحة وما يثبت ملكيتك، وهنشيله في أسرع وقت.") + `<p><a href="mailto:${esc(site.email)}">${esc(site.email)}</a></p>`), 0.3);
 page("/contact/", textPage("contact", "اتصل بنا", `<p>لأي اقتراح أو تصحيح أو تعاون، راسلنا على:</p><p><a href="mailto:${esc(site.email)}">${esc(site.email)}</a></p>`), 0.3);
 
 // البحث (صفحة + فهرس JSON)
