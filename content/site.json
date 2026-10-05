@@ -8,8 +8,8 @@
   "description": "واتشلي — دليل عربي للأفلام والمسلسلات: ملخصات القصص والحلقات، طاقم العمل، الإعلانات الرسمية، وأماكن المشاهدة القانونية على المنصات.",
   "email": "watchly.contact@example.com",
   "ads": {
-    "head": "<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7507197647186932\"\n     crossorigin=\"anonymous\"></script>",
-    "body_end": "<meta name=\"monetag\" content=\"188b48f4c33978be5fd2a6434df2bb68\">"
+    "head": "<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7507197647186932\"\n     crossorigin=\"anonymous\"></script>\n<meta name=\"monetag\" content=\"188b48f4c33978be5fd2a6434df2bb68\">",
+    "body_end": "https://asiafilm.org/4/0bb74485a9e9c5b6f86351fc924ceec3"
   },
   "ads_txt": "google.com, pub-7507197647186932, DIRECT, f08c47fec0942fa0",
   "about": "Watchly دليل عربي للأفلام والمسلسلات. بنكتب ملخصات القصص والحلقات ورأينا في الأعمال، وبنقولك تقدر تتفرج عليها فين بشكل قانوني على المنصات الرسمية. إحنا ما بنرفعش ولا بنعرض أي حلقات أو أفلام.",
