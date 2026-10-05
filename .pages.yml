@@ -80,6 +80,11 @@ content:
         type: string
         list: true
         description: تصنيف واحد في كل خانة (كوميدي، دراما، رعب...). اكتبي نفس الكلمة بنفس الشكل كل مرة.
+      - name: lists
+        label: القوائم (مثلا رمضان 2027 أو يعرض حاليًا)
+        type: string
+        list: true
+        description: اكتبي اسم القائمة بنفس الشكل كل مرة. كل قائمة بتعمل صفحة لوحدها.
       - name: poster
         label: البوستر (صورة طولية)
         type: image
@@ -215,6 +220,11 @@ content:
       - { name: favicon, label: أيقونة التاب في المتصفح (صورة مربعة صغيرة), type: image }
       - { name: cover, label: صورة المشاركة الافتراضية (بتظهر لما حد يشير الموقع على فيسبوك/واتساب), type: image }
       - { name: tagline, label: الشعار, type: string }
+      - name: home_lists
+        label: قوائم تظهر في الرئيسية
+        type: string
+        list: true
+        description: اكتبي اسم القائمة بالظبط زي ما هو في الأعمال (مثلا رمضان 2027)
       - { name: description, label: وصف الموقع لجوجل, type: text }
       - { name: email, label: إيميل التواصل, type: string }
       - name: social
