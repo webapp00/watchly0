@@ -136,6 +136,22 @@ content:
       - name: quality
         label: الجودة (مثلا BluRay أو 1080p)
         type: string
+      - name: rights
+        label: حقوق الفيديو (مهم لجوجل)
+        type: select
+        description: حدديها لو العمل حقوقه معاكي أو ملكية عامة أو Creative Commons. من غيرها صفحات المشاهدة بتشتغل للزوار بس مش بتظهر في جوجل.
+        options:
+          values:
+            - { value: "", label: مش محدد }
+            - { value: owned, label: حقوق مملوكة لي / مرخّص لي }
+            - { value: public_domain, label: ملكية عامة (Public Domain) }
+            - { value: cc, label: رخصة Creative Commons }
+      - name: rights_note
+        label: ملاحظة الحقوق (اختياري — مثلا اسم الرخصة أو المصدر)
+        type: string
+      - name: video_date
+        label: تاريخ نشر الفيديو على الموقع (لجوجل)
+        type: date
       - name: videos
         label: سيرفرات مشاهدة الفيلم
         type: object
