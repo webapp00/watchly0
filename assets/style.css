@@ -271,3 +271,15 @@ h1,h2,h3{line-height:1.4}
 .modal[hidden]{display:none}
 .modal-in{position:relative;width:min(960px,100%)}
 .modal-x{position:absolute;top:-44px;inset-inline-end:0;background:var(--y);color:#000;border:0;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer}
+
+/* ===== أداة جلب البيانات ===== */
+.t-bar{display:flex;gap:10px;align-items:center}.t-bar .search-input{margin:0}
+.t-list{display:flex;flex-direction:column;gap:8px}
+.t-item{all:unset;cursor:pointer;display:flex;flex-direction:column;background:var(--p);border:1px solid var(--l);border-radius:12px;padding:10px 14px;font-family:inherit}
+.t-item:hover{border-color:var(--y)} .t-item small{color:var(--m)}
+.t-out{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.t-row{display:grid;grid-template-columns:150px 1fr 40px;gap:10px;align-items:start;background:var(--p);border:1px solid var(--l);border-radius:12px;padding:10px 14px}
+.t-k{color:var(--y);font-weight:700}
+.t-v{margin:0;white-space:pre-wrap;font-family:inherit}
+.t-copy{background:var(--y);color:#000;border:0;border-radius:8px;height:32px;cursor:pointer;font-size:16px}
+@media(max-width:560px){.t-row{grid-template-columns:1fr 40px}.t-k{grid-column:1/-1}}
