@@ -60,12 +60,15 @@ content:
       - name: country
         label: بلد الإنتاج
         type: string
+        default: مصر
       - name: language
         label: اللغة
         type: string
+        default: العربية
       - name: runtime
         label: المدة (بالدقايق)
         type: number
+        default: 40
       - name: episodes_count
         label: عدد الحلقات (للمسلسلات)
         type: number
@@ -122,14 +125,20 @@ content:
             default: اشتراك
             options:
               values: [اشتراك, مجانًا, إيجار, شراء]
+      - name: trailer
+        label: رابط التريلر (يوتيوب)
+        type: string
+      - name: quality
+        label: الجودة (مثلا BluRay أو 1080p)
+        type: string
       - name: videos
-        label: فيديوهات (إعلان رسمي أو فيلم ملكية عامة)
+        label: سيرفرات مشاهدة الفيلم
         type: object
         list:
           collapsible:
             collapsed: true
             summary: "{title}"
-        description: الصقي رابط يوتيوب أو Internet Archive أو Vimeo أو Dailymotion العادي، والموقع بيحوله لوحده.
+        description: الصقي رابط الـ embed (أو كود iframe كامل) وسيبي الاسم فاضي علشان يتكتب لوحده.
         fields:
           - { name: title, label: اسم الفيديو (مثال الإعلان الرسمي), type: string }
           - { name: url, label: الرابط, type: string }
@@ -145,6 +154,14 @@ content:
           - { name: quality, label: الجودة (مثلا 1080p), type: string }
           - { name: size, label: الحجم (مثلا 1.2 GB), type: string }
           - { name: url, label: رابط التحميل, type: string }
+      - name: servers_bulk
+        label: ⚡ سيرفرات كل الحلقات مرة واحدة
+        type: text
+        description: "سطر لكل حلقة: رقم الحلقة | رابط | رابط ... مثال: 1 | https://streamtape.com/e/xxx | https://mixdrop.ag/e/yyy — ولموسم تاني اكتبي 2-1 بدل 1"
+      - name: downloads_bulk
+        label: ⚡ روابط تحميل كل الحلقات مرة واحدة
+        type: text
+        description: "نفس الطريقة: رقم الحلقة | رابط تحميل | رابط تحميل"
       - name: episodes
         label: الحلقات (للمسلسلات)
         type: object
@@ -158,7 +175,7 @@ content:
           - { name: title, label: عنوان الحلقة (اختياري), type: string }
           - { name: summary, label: ملخص الحلقة, type: text }
           - name: servers
-            label: سيرفرات المشاهدة (للمحتوى اللي انتي مالكة حقوقه)
+            label: سيرفرات المشاهدة
             type: object
             list:
               collapsible:
@@ -215,11 +232,7 @@ content:
           - { name: head, label: كود في الـ head (AdSense أو كود التوثيق), type: text }
           - { name: in_page, label: إعلان جوه صفحة العمل, type: text }
           - { name: body_end, label: كود آخر الصفحة (Adsterra / Monetag), type: text }
-      - name: video_hosts
-        label: سيرفرات فيديو إضافية (للمحتوى اللي انتي مالكة حقوقه)
-        type: string
-        list: true
-        description: اسم الدومين بس، واحد في كل خانة، مثال streamtape.com. وفي صفحة العمل الصقي رابط الـ embed اللي السيرفر بيديهولك.
       - { name: ads_txt, label: محتوى ملف ads.txt, type: text }
+      - { name: dmca, label: نص صفحة حقوق النشر (DMCA), type: text }
       - { name: about, label: صفحة من نحن, type: text }
       - { name: privacy, label: صفحة سياسة الخصوصية, type: text }
