@@ -48,7 +48,7 @@ h1,h2,h3{line-height:1.4}
 .hero.no-bd .hero-fade{background:linear-gradient(to top,var(--bg) 6%,#0b0b0bee 40%,#0b0b0bcc);backdrop-filter:blur(18px)}
 .hero-poster{width:230px;border-radius:18px;border:1px solid var(--l);box-shadow:0 20px 50px #000a;flex-shrink:0}
 @media(max-width:760px){.hero-poster{display:none}}
-.hero h1{font-size:clamp(30px,5vw,56px);font-weight:900;margin:12px 0 4px;max-width:760px}
+.hero h1,.hero .hero-title{font-size:clamp(30px,5vw,56px);font-weight:900;margin:12px 0 4px;max-width:760px}
 .hero-story{max-width:620px;color:#fffd;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sec{margin-top:40px}
 .sec-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
@@ -283,3 +283,14 @@ h1,h2,h3{line-height:1.4}
 .t-v{margin:0;white-space:pre-wrap;font-family:inherit}
 .t-copy{background:var(--y);color:#000;border:0;border-radius:8px;height:32px;cursor:pointer;font-size:16px}
 @media(max-width:560px){.t-row{grid-template-columns:1fr 40px}.t-k{grid-column:1/-1}}
+
+/* SEO additions */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.pager{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:30px 0}
+.pager a,.pager span{min-width:40px;text-align:center;padding:6px 12px;border:1px solid var(--l);border-radius:10px;font-weight:700}
+.pager a:hover{border-color:var(--y);color:var(--y)}
+.pager .on{background:var(--y);color:#000;border-color:var(--y)}
+.filmo{margin:16px 0 24px;padding-inline-start:20px;line-height:2}
+.filmo a{color:var(--y)}
+.rights-note{color:var(--m);font-size:13px;margin:10px 0 0}
+.body .tags{margin-top:24px}
