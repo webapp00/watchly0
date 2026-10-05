@@ -210,6 +210,7 @@ const works = fs
     w.type = w.type === "series" ? "series" : "movie";
     w.slug = slugify(w.slug) || slugify(`${w.original_title || w.title}-${w.year || ""}`);
     w.genres = (w.genres || []).map((g) => String(g).trim()).filter(Boolean);
+    w.lists = (w.lists || []).map((g) => String(g).trim()).filter(Boolean);
     w.cast = (w.cast || []).filter((c) => c && c.name);
     w.platforms = (w.platforms || []).filter((p) => p && p.name && p.url);
     w.episodes = mergeBulk(mergeBulk([...(w.episodes || [])], w.servers_bulk, "servers"), w.downloads_bulk, "downloads");
@@ -259,6 +260,9 @@ const series = works.filter((w) => w.type === "series");
 const movies = works.filter((w) => w.type === "movie");
 const genres = [...new Set(works.flatMap((w) => w.genres))].sort((a, b) => a.localeCompare(b, "ar"));
 const genreHref = (g) => `/genre/${slugify(g)}/`;
+const lists = [...new Set(works.flatMap((w) => w.lists))];
+const listHref = (l) => `/list/${slugify(l)}/`;
+const homeLists = (site.home_lists || []).map((l) => String(l).trim()).filter((l) => lists.includes(l));
 
 /* ================= القالب العام ================= */
 
@@ -306,6 +310,7 @@ ${site.ads?.head || ""}
       <a href="/series/">المسلسلات</a>
       <a href="/movies/">الأفلام</a>
       <a href="/genres/">التصنيفات</a>
+      ${lists.length ? '<a href="/lists/">القوائم</a>' : ""}
       <a href="/free/">مجانًا</a>
     </nav>
     <a class="search-btn" href="/search/" aria-label="بحث">🔍 <span>ابحث</span></a>
@@ -398,6 +403,7 @@ function homePage() {
     .join("");
 
   const body = `${heroHtml}
+${homeLists.map((l) => rail(l, works.filter((w) => w.lists.includes(l)), listHref(l))).join("")}
 ${rail("أحدث الإضافات", works, null)}
 ${rail("المسلسلات", series, "/series/")}
 ${rail("الأفلام", movies, "/movies/")}
@@ -693,6 +699,22 @@ page("/free/", listPage({ title: "أفلام ومسلسلات تتفرج علي�
   );
 }
 
+// القوائم (رمضان 2027، يعرض حاليًا، ...)
+if (lists.length) {
+  const c = crumbs([{ name: "القوائم" }]);
+  page("/lists/", layout({
+    title: "قوائم الأفلام والمسلسلات", canonical: "/lists/", description: "قوائم مختارة من الأفلام والمسلسلات على Watchly.",
+    body: `<section class="wrap page">${c.html}<h1>القوائم</h1><div class="chips">${lists.map((l) => `<a href="${listHref(l)}">${esc(l)} <small>${works.filter((w) => w.lists.includes(l)).length}</small></a>`).join("")}</div></section>`,
+    jsonld: [c.ld],
+  }), 0.7);
+  for (const l of lists)
+    page(listHref(l), listPage({
+      title: `${l} — قائمة الأعمال`, h1: l, intro: `كل الأعمال في قائمة «${l}» على Watchly.`,
+      list: works.filter((w) => w.lists.includes(l)), canonical: listHref(l),
+      crumbItems: [{ name: "القوائم", href: "/lists/" }, { name: l }],
+    }), 0.8);
+}
+
 for (const g of genres) {
   page(
     genreHref(g),
@@ -748,6 +770,16 @@ write("search.json", JSON.stringify(works.map((w) => ({
   k: [w.genres.join(" "), w.cast.map((c) => c.name).join(" "), w.director || ""].join(" "),
 }))));
 
+// أداة جلب البيانات (مش بتتأرشف)
+write("tool/index.html", layout({
+  title: "أداة جلب بيانات عمل", canonical: "/tool/", noindex: true,
+  body: `<section class="wrap page narrow"><h1>⚡ جلب بيانات فيلم أو مسلسل</h1>
+<p class="muted">اكتبي اسم العمل (عربي أو إنجليزي)، والأداة هتجيب البيانات الأساسية من Wikidata.</p>
+<div class="t-bar"><input id="t-q" class="search-input" placeholder="مثلا: The Godfather أو خمسين خمسين"><button id="t-go" class="btn">بحث</button></div>
+<p id="t-msg" class="muted"></p><div id="t-list" class="t-list"></div><div id="t-out" class="t-out"></div></section>
+<script src="/assets/tool.js" defer></script>`,
+}));
+
 // 404
 write("404.html", layout({ title: "الصفحة مش موجودة", noindex: true, canonical: "/404", body: `<section class="wrap page narrow center"><div class="big">404</div><h1>الصفحة دي مش موجودة</h1><p><a class="btn" href="/">رجوع للرئيسية</a></p></section>` }));
 
@@ -756,7 +788,7 @@ write("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${esc(BASE + encodeURI(u.loc))}</loc><lastmod>${NOW}</lastmod><priority>${u.priority.toFixed(1)}</priority></url>`).join("\n")}
 </urlset>`);
-write("robots.txt", `User-agent: *\nAllow: /\nDisallow: /search/\n\nSitemap: ${BASE}/sitemap.xml\n`);
+write("robots.txt", `User-agent: *\nAllow: /\nDisallow: /search/\nDisallow: /tool/\n\nSitemap: ${BASE}/sitemap.xml\n`);
 
 // ads.txt (لو اتحط في site.json)
 if (site.ads_txt) write("ads.txt", site.ads_txt);
