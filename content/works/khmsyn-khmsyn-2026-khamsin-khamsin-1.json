@@ -1,0 +1,52 @@
+{
+  "status": "published",
+  "featured": false,
+  "type": "series",
+  "title": "خمسين خمسين  (2026)  Khamsin Khamsin",
+  "original_title": "Khamsin Khamsin",
+  "slug": "خمسين خمسين  (2026)  Khamsin Khamsin",
+  "year": 2026,
+  "release_date": "2026-10-05",
+  "country": "مصر",
+  "language": "عربي",
+  "runtime": 40,
+  "episodes_count": 10,
+  "rating": 9,
+  "genres": [
+    "كوميدي",
+    "عائلي"
+  ],
+  "poster": "/images/_315x420_4e2a34a6650b51cb1960c09d4210e2f8199a665b9a62041bdd8bf9bc0ff5d04d-1.jpg",
+  "story": "تدور الأحداث حول (رانيا)، المحامية المتفانية التي تنقلب حياتها رأسًا على عقب بعد اختفاء زوجها فجأةً، لتتحول إلى امرأة قوية تسعى للانتقام واستعادة حياتها بطرقها الخاصة بالتعاون مع ابنها.",
+  "director": " ﺇﺧﺮاﺝ: أحمد عبدالوهاب (مخرج) ",
+  "writer": " ﺗﺄﻟﻴﻒ: عمرو أبو زيد (مؤلف) أحمد هشام (مؤلف) ",
+  "cast": [
+    {
+      "name": "كندة علوش"
+    }
+  ],
+  "episodes": [
+    {
+      "season": 1,
+      "summary": "رانيا ام تكرس كل حياتها لزوجها سعد وابنها رامي ، تفاجأ في يوم بهروب سعد للخارج لخسارة شركته وإصدار أمر بالقبض عليه ، الأمر الذي يجعلها تعيد تشكيل حياتها مره اخري وتقرر النزول الي سوق العمل . تنصدم عند معرفتها بحقيقة هروب زوجها مع سكرتيرته يسرا الي دبي للزواج والإقامة هناك ."
+    },
+    {
+      "number": 2,
+      "summary": "يقرر رامي العمل بجانب دراسته وتمرينه بدون معرفة والدة للمساعدة في المصاريف ، يتعرض لكثير من المشاكل في بداية عمله . تتعرض رانيا لكثير من المواقف خلال عملها في مكتب محاماة .",
+      "servers": [
+        {
+          "title": "upbolt.to",
+          "url": "<iframe     src=\"https://upbolt.to/e/g695bzmyij8u\"     allowfullscreen     loading=\"lazy\"     referrerpolicy=\"strict-origin-when-cross-origin\"     style=\"width:100%;aspect-ratio:16/9;border:0\"> </iframe>"
+        }
+      ],
+      "downloads": [
+        {
+          "quality": "1080",
+          "size": "450",
+          "url": "https://upbolt.to/g695bzmyij8u"
+        }
+      ]
+    }
+  ],
+  "date": "2026-10-05"
+}
